@@ -1,4 +1,5 @@
-﻿.venv
+﻿chardata/
+.venv
 **db.*
 .env*
 .idea
