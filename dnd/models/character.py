@@ -1,13 +1,19 @@
 from django.core.files.base import ContentFile
 from django.db import models
+from django.conf import settings
 import json
 
-from . import *
+from .player import Player
 
 
 class Character(models.Model):
-    _id = models.AutoField(unique=True)
-    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    id = models.AutoField(auto_created=True, primary_key=True)
+    owner = models.ForeignKey(
+        Player,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
 
     data = models.FileField(upload_to="chardata")
 
@@ -38,6 +44,8 @@ class Character(models.Model):
         Sets specific parameter(-s) in character data to a value
         Usage: Put path to the param into args and what should we change to kwargs
         Returns True if set successfully and False if path not found
+        Example usage:
+        char_obj.set("info", "charClass", value="Колдун")
         """
         data = self._load_data()
         cur = data

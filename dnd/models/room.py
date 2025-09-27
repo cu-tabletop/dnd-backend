@@ -2,5 +2,5 @@ from django.db import models
 
 
 class Room(models.Model):
-    _id = models.AutoField(unique=True)
+    id = models.AutoField(auto_created=True, primary_key=True)
     title = models.CharField(max_length=256)
