@@ -1,4 +1,5 @@
-﻿chardata/
+﻿campaign_icons/
+chardata/
 .venv
 **db.*
 .env*

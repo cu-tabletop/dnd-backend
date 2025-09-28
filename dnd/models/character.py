@@ -1,8 +1,8 @@
 from django.core.files.base import ContentFile
 from django.db import models
-from django.conf import settings
 import json
 
+from .campaign import Campaign
 from .player import Player
 
 
@@ -14,6 +14,7 @@ class Character(models.Model):
         null=True,
         blank=True
     )
+    campaign = models.ForeignKey(Campaign, models.CASCADE, null=True)
 
     data = models.FileField(upload_to="chardata")
 

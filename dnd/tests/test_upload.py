@@ -11,14 +11,22 @@ class TestUploadCharacter(APITestCase):
         url = reverse('upload character')
         data_str = json.load(open("dnd/tests/example-character.json", encoding='utf-8'))
         user_id = 1
-        Player.objects.create(
+        campaign_obj = Campaign.objects.create(
+            title='test campaign'
+        )
+        player_obj = Player.objects.create(
             id=user_id,
             bio="test bio",
             admin=False,
         )
+        CampaignMembership.objects.create(
+            user=player_obj,
+            campaign=campaign_obj,
+        )
         self.assertEqual(Character.objects.all().count(), 0)
         response = self.client.post(url, data={
             "owner_id": user_id,
+            "campaign_id": campaign_obj.id,
             "data": data_str,
             "char_name": "example-character",
         }, format='json')

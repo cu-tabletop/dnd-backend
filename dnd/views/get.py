@@ -24,4 +24,5 @@ def get_character_view(request: Request) -> Response:
         'char_id': char_obj.id,
         'owner_telegram_id': char_obj.owner.telegram_id,
         'char_data': char_obj.load_data(),
+        'campaign_id': char_obj.campaign_id,
     }, status=HTTP_200_OK)
