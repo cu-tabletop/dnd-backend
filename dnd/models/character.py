@@ -17,21 +17,21 @@ class Character(models.Model):
 
     data = models.FileField(upload_to="chardata")
 
-    def _load_data(self):
+    def load_data(self):
         """ Internal function that loads data from file stored in database. """
         with self.data.open('r') as f:
             return json.load(f)
 
-    def _save_data(self, data):
+    def save_data(self, data):
         """ Internal function that saves data to a file stored in database. """
-        self.data.save(self.data.name, ContentFile(json.dumps(data)), save=False)
+        self.data.save(f"{self.id}.json", ContentFile(json.dumps(data)), save=False)
 
     def get(self, *args):
         """
         Gets specific parameter from character data.
         Usage: Put path to the param into args
         """
-        cur = self._load_data()
+        cur = self.load_data()
         for arg in args:
             try:
                 cur = cur[arg]
@@ -47,7 +47,7 @@ class Character(models.Model):
         Example usage:
         char_obj.set("info", "charClass", value="Колдун")
         """
-        data = self._load_data()
+        data = self.load_data()
         cur = data
         for arg in args:
             try:
@@ -56,5 +56,5 @@ class Character(models.Model):
                 return False
         for n, v in kwargs:
             cur[n] = v
-        self._save_data(data)
+        self.save_data(data)
         return True
