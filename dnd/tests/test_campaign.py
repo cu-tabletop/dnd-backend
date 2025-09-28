@@ -109,3 +109,129 @@ class TestGetCampaignInfo(APITestCase):
         response: Response = self.client.get(self.url, {'user_id': 'notanint'})
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('error', response.data)
+
+class TestAddToCampaign(APITestCase):
+    client: APIClient
+
+    def setUp(self):
+        self.url = reverse('add to campaign')
+        self.owner = Player.objects.create(telegram_id=1)
+        self.user = Player.objects.create(telegram_id=2)
+        self.campaign = Campaign.objects.create(title="Test Campaign", private=False)
+        CampaignMembership.objects.create(
+            user=self.owner, campaign=self.campaign, status=2  # Owner
+        )
+
+    def test_add_user_success(self):
+        data = {
+            "campaign_id": self.campaign.id,
+            "owner_id": self.owner.id,
+            "user_id": self.user.id,
+        }
+        response: Response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(
+            CampaignMembership.objects.filter(user=self.user, campaign=self.campaign).exists()
+        )
+
+    def test_add_user_already_exists(self):
+        CampaignMembership.objects.create(user=self.user, campaign=self.campaign, status=1)
+        data = {
+            "campaign_id": self.campaign.id,
+            "owner_id": self.owner.id,
+            "user_id": self.user.id,
+        }
+        response: Response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        membership = CampaignMembership.objects.get(user=self.user, campaign=self.campaign)
+        self.assertEqual(membership.status, 0)  # reset to player
+
+    def test_missing_parameters(self):
+        response: Response = self.client.post(self.url, {}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_campaign_not_found(self):
+        data = {"campaign_id": 999, "owner_id": self.owner.id, "user_id": self.user.id}
+        response: Response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_owner_permission_denied(self):
+        other_player = Player.objects.create(telegram_id=3)
+        data = {"campaign_id": self.campaign.id, "owner_id": other_player.id, "user_id": self.user.id}
+        response: Response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_not_found(self):
+        data = {"campaign_id": self.campaign.id, "owner_id": self.owner.id, "user_id": 9999}
+        response: Response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class TestEditPermissions(APITestCase):
+    client: APIClient
+
+    def setUp(self):
+        self.url = reverse('edit permissions')
+        self.owner = Player.objects.create(telegram_id=1)
+        self.user = Player.objects.create(telegram_id=2)
+        self.campaign = Campaign.objects.create(title="Permission Campaign", private=False)
+        CampaignMembership.objects.create(user=self.owner, campaign=self.campaign, status=2)
+        CampaignMembership.objects.create(user=self.user, campaign=self.campaign, status=0)
+
+    def test_edit_permissions_success(self):
+        data = {
+            "campaign_id": self.campaign.id,
+            "owner_id": self.owner.id,
+            "user_id": self.user.id,
+            "status": 1,  # Promote to master
+        }
+        response: Response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        membership = CampaignMembership.objects.get(user=self.user, campaign=self.campaign)
+        self.assertEqual(membership.status, 1)
+
+    def test_missing_parameters(self):
+        response: Response = self.client.post(self.url, {}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_invalid_status_value(self):
+        data = {
+            "campaign_id": self.campaign.id,
+            "owner_id": self.owner.id,
+            "user_id": self.user.id,
+            "status": 5,  # invalid
+        }
+        response: Response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_campaign_not_found(self):
+        data = {
+            "campaign_id": 9999,
+            "owner_id": self.owner.id,
+            "user_id": self.user.id,
+            "status": 1,
+        }
+        response: Response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_owner_permission_denied(self):
+        other_player = Player.objects.create(telegram_id=3)
+        data = {
+            "campaign_id": self.campaign.id,
+            "owner_id": other_player.id,
+            "user_id": self.user.id,
+            "status": 1,
+        }
+        response: Response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_membership_not_found(self):
+        stranger = Player.objects.create(telegram_id=4)
+        data = {
+            "campaign_id": self.campaign.id,
+            "owner_id": self.owner.id,
+            "user_id": stranger.id,
+            "status": 1,
+        }
+        response: Response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

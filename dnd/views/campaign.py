@@ -89,17 +89,79 @@ def get_campaign_info_view(request: Request) -> Response:
     serializer = CampaignSerializer(campaigns, many=True)
     return Response(data={"campaigns": serializer.data}, status=HTTP_200_OK)
 
-@api_view(['GET'])
+@api_view(['POST'])
 @parser_classes([JSONParser])
-def add_master_to_campaign_view(request: Request) -> Response:
+def add_to_campaign_view(request) -> Response:
+    campaign_id = request.data.get("campaign_id")
+    owner_id = request.data.get("owner_id")
+    user_id = request.data.get("user_id")
 
-    return Response(data={}, status=HTTP_200_OK)
+    if not campaign_id or not owner_id or not user_id:
+        return Response({"error": "Missing required parameters"}, status=HTTP_400_BAD_REQUEST)
 
-@api_view(['GET'])
+    try:
+        campaign_obj = Campaign.objects.get(id=campaign_id)
+    except Campaign.DoesNotExist:
+        return Response({"error": "Campaign not found"}, status=HTTP_404_NOT_FOUND)
+
+    # Verify owner permissions
+    if not CampaignMembership.objects.filter(
+        campaign=campaign_obj, user_id=owner_id, status=2
+    ).exists():
+        return Response({"error": "Only the owner can add members"}, status=HTTP_403_FORBIDDEN)
+
+    try:
+        user = Player.objects.get(id=user_id)
+    except Player.DoesNotExist:
+        return Response({"error": "User not found"}, status=HTTP_404_NOT_FOUND)
+
+    membership, created = CampaignMembership.objects.get_or_create(
+        user=user, campaign=campaign_obj, defaults={"status": 0}
+    )
+    if not created:
+        membership.status = 0
+        membership.save()
+
+    return Response(
+        {"message": f"User {user.id} added to campaign {campaign_obj.id}"},
+        status=HTTP_201_CREATED if created else HTTP_200_OK,
+    )
+
+
+@api_view(['POST', 'PUT'])
 @parser_classes([JSONParser])
-def edit_permissions_view(request: Request) -> Response:
+def edit_permissions_view(request) -> Response:
+    campaign_id = request.data.get("campaign_id")
+    owner_id = request.data.get("owner_id")
+    user_id = request.data.get("user_id")
+    new_status = request.data.get("status")  # 0 - player, 1 - master, 2 - owner
 
-    return Response(data={}, status=HTTP_200_OK)
+    if not all([campaign_id, owner_id, user_id]) or new_status is None:
+        return Response({"error": "Missing required parameters"}, status=HTTP_400_BAD_REQUEST)
 
+    if new_status not in [0, 1, 2]:
+        return Response({"error": "Invalid status value"}, status=HTTP_400_BAD_REQUEST)
 
+    try:
+        campaign = Campaign.objects.get(id=campaign_id)
+    except Campaign.DoesNotExist:
+        return Response({"error": "Campaign not found"}, status=HTTP_404_NOT_FOUND)
 
+    # Verify owner permissions
+    if not CampaignMembership.objects.filter(
+        campaign=campaign, user_id=owner_id, status=2
+    ).exists():
+        return Response({"error": "Only the owner can edit permissions"}, status=HTTP_403_FORBIDDEN)
+
+    try:
+        membership = CampaignMembership.objects.get(campaign=campaign, user_id=user_id)
+    except CampaignMembership.DoesNotExist:
+        return Response({"error": "Membership not found"}, status=HTTP_404_NOT_FOUND)
+
+    membership.status = new_status
+    membership.save()
+
+    return Response(
+        {"message": f"Updated user {user_id} role to {new_status} in campaign {campaign.id}"},
+        status=HTTP_200_OK,
+    )
