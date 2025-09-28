@@ -57,8 +57,37 @@ def create_campaign_view(request: Request) -> Response:
 @api_view(['GET'])
 @parser_classes([JSONParser])
 def get_campaign_info_view(request: Request) -> Response:
+    campaign_id = request.query_params.get('campaign_id')
+    user_id = request.query_params.get('user_id')
 
-    return Response(data={}, status=HTTP_200_OK)
+    if campaign_id:
+        try:
+            campaign_obj = Campaign.objects.get(id=campaign_id)
+        except Campaign.DoesNotExist:
+            return Response(status=HTTP_404_NOT_FOUND)
+        if campaign_obj.private:
+            if not user_id or not CampaignMembership.objects.filter(
+                    campaign=campaign_obj, user_id=user_id
+            ).exists():
+                return Response(status=HTTP_403_FORBIDDEN)
+        serializer = CampaignSerializer(campaign_obj)
+        return Response(serializer.data, status=HTTP_200_OK)
+
+    campaigns = Campaign.objects.filter(private=False)
+
+    if user_id:
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            return Response({"error": "Invalid user_id"}, status=HTTP_400_BAD_REQUEST)
+
+        user_campaigns = Campaign.objects.filter(
+            id__in=CampaignMembership.objects.filter(user_id=user_id).values_list("campaign_id", flat=True)
+        )
+        campaigns = campaigns.union(user_campaigns)
+
+    serializer = CampaignSerializer(campaigns, many=True)
+    return Response(data={"campaigns": serializer.data}, status=HTTP_200_OK)
 
 @api_view(['GET'])
 @parser_classes([JSONParser])
