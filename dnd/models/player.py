@@ -6,4 +6,4 @@ class Player(models.Model):
     pfp = models.ImageField(upload_to="pfps/", null=True)
     bio = models.TextField(blank=True, null=True)
     admin = models.BooleanField(default=False)
-    # You can add any additional fields here
+    verified = models.BooleanField(default=False)
