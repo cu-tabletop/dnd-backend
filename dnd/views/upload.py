@@ -27,9 +27,6 @@ def upload_character(request: Request):
         char_name = hash(char_name) % 10000
 
     char_obj = Character.objects.create(owner=owner_obj)
-    char_obj.data.save(
-        f"{char_name}.json",
-        ContentFile(json.dumps(data)),
-    )
+    char_obj.save_data(data)
 
     return Response(status=status.HTTP_201_CREATED)

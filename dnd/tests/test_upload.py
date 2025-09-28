@@ -9,7 +9,7 @@ from ..models import *
 class TestUploadCharacter(APITestCase):
     def test_upload_character_success(self):
         url = reverse('upload character')
-        data_str = json.load(open("dnd/tests/example-character.json"))
+        data_str = json.load(open("dnd/tests/example-character.json", encoding='utf-8'))
         user_id = 1
         Player.objects.create(
             id=user_id,
