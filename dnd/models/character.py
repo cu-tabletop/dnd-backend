@@ -55,7 +55,7 @@ class Character(models.Model):
                 cur = cur[arg]
             except (KeyError, IndexError, TypeError):
                 return False
-        for n, v in kwargs:
+        for n, v in kwargs.items():
             cur[n] = v
         self.save_data(data)
         return True
