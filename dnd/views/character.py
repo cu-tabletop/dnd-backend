@@ -20,6 +20,13 @@ def get_character_view(request: Request) -> Response:
         return Response(status=HTTP_404_NOT_FOUND)
     char_obj = char_obj.first()
 
+    try:
+        path_to_param = request.query_params.getlist("path") # it somehow returns only the first element of path list
+    except (ValueError, IndexError, TypeError):
+        return Response(status=HTTP_400_BAD_REQUEST)
+    if path_to_param and isinstance(path_to_param, list):
+        return Response({"requested": char_obj.get(*path_to_param)}, status=HTTP_200_OK)
+
     return Response(data={
         'char_id': char_obj.id,
         'owner_telegram_id': char_obj.owner.telegram_id,
