@@ -1,6 +1,7 @@
 ﻿django
 djangorestframework
 djangorestframework-simplejwt
+drf-yasg
 requests
 beautifulsoup4
 gunicorn
