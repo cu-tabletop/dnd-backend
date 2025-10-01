@@ -1,6 +1,4 @@
-﻿from typing import Optional
-
-from ninja import Router, Schema
+﻿from ninja import Router, Schema
 from ninja.responses import Response
 
 from ..models import *
@@ -11,7 +9,7 @@ router = Router()
 def get_character_view(request, char_id: int) -> Response:
     char_obj = Character.objects.filter(id=char_id)
     if not char_obj.exists():
-        return Response(status=404)
+        return Response({}, status=404)
     char_obj = char_obj.first()
 
     return Response(data={
@@ -30,12 +28,12 @@ class UploadCharacter(Schema):
 def upload_character_view(request, upload: UploadCharacter):
     owner_obj = Player.objects.filter(id=upload.owner_id)
     if not owner_obj.exists():
-        return Response(status=404)
+        return Response({}, status=404)
     owner_obj = owner_obj.first()
 
     campaign_obj = Campaign.objects.filter(id=upload.campaign_id)
     if not campaign_obj.exists():
-        return Response(status=404)
+        return Response({}, status=404)
     campaign_obj = campaign_obj.first()
 
     char_obj = Character.objects.create(owner=owner_obj, campaign=campaign_obj)

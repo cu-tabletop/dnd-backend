@@ -1,13 +1,15 @@
-﻿from io import BytesIO
+﻿import base64
+from io import BytesIO
+from typing import List
 
+from PIL import Image as PILImage
 from django.core.files.base import ContentFile
 from ninja import Router, Schema
+from ninja.errors import HttpError
 from ninja.responses import Response
 
 from ..models import *
-
-import base64
-from PIL import Image as PILImage
+from ..models.schemas import CampaignOut
 
 router = Router()
 
@@ -52,31 +54,34 @@ def create_campaign_view(request, campaign_request: CreateCampaignRequest) -> Re
     )
     return Response({}, status=201)
 
-@router.get("get/")
-def get_campaign_info_view(request, campaign_id: int | None = None, user_id: int | None = None) -> Response:
+
+@router.get("get/", response={200: CampaignOut | List[CampaignOut], 404: dict})
+def get_campaign_info_view(request, campaign_id: int | None = None, user_id: int | None = None):
     if campaign_id:
         try:
             campaign_obj = Campaign.objects.get(id=campaign_id)
         except Campaign.DoesNotExist:
-            return Response({}, status=404)
+            raise HttpError(404, "requested campaign does not exist")
+
         if campaign_obj.private:
             if not user_id or not CampaignMembership.objects.filter(
                     campaign=campaign_obj, user_id=user_id
             ).exists():
-                return Response({}, status=403)
-        serializer = CampaignSerializer(campaign_obj)
-        return Response(serializer.data, status=200)
+                # 👌 disguise private campaigns as non-existent
+                raise HttpError(404, "requested campaign does not exist")
+
+        return campaign_obj
 
     campaigns = Campaign.objects.filter(private=False)
 
     if user_id:
         user_campaigns = Campaign.objects.filter(
-            id__in=CampaignMembership.objects.filter(user_id=user_id).values_list("campaign_id", flat=True)
+            id__in=CampaignMembership.objects.filter(user_id=user_id)
+            .values_list("campaign_id", flat=True)
         )
         campaigns = campaigns.union(user_campaigns)
 
-    serializer = CampaignSerializer(campaigns, many=True)
-    return Response(data={"campaigns": serializer.data}, status=200)
+    return list(campaigns)
 
 class AddToCampaignRequest(Schema):
     campaign_id: int

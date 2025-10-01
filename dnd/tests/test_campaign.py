@@ -1,9 +1,7 @@
 ﻿import base64
 
-from rest_framework.test import APITestCase, APIClient
-from rest_framework import status
-from rest_framework.response import Response
 from django.urls import reverse
+from rest_framework.test import APITestCase, APIClient
 
 from ..models import Player, Campaign, CampaignMembership
 
@@ -86,22 +84,21 @@ class TestGetCampaignInfo(APITestCase):
             'campaign_id': self.private_campaign.id,
             'user_id': another_user.id,
         })
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_private_campaign_no_user_id(self):
         response = self.client.get(self.url, {'campaign_id': self.private_campaign.id})
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 404)
 
     def test_get_all_public_campaigns(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertIn('campaigns', response.json())
-        self.assertTrue(any(c['title'] == 'Public Campaign' for c in response.json()['campaigns']))
+        self.assertTrue(any(c['title'] == 'Public Campaign' for c in response.json()))
 
     def test_get_campaigns_with_valid_user_id(self):
         response = self.client.get(self.url, {'user_id': self.player.id})
         self.assertEqual(response.status_code, 200)
-        titles = [c['title'] for c in response.json()['campaigns']]
+        titles = [c['title'] for c in response.json()]
         self.assertIn('Public Campaign', titles)
         self.assertIn('Private Campaign', titles)
 
