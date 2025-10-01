@@ -1,5 +1,5 @@
 ﻿from ninja import Schema
 
 
-class PingResponse(Schema):
+class Message(Schema):
     message: str

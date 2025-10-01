@@ -10,22 +10,17 @@ from ninja.errors import HttpError
 from ninja.responses import Response
 
 from ..models import Campaign, Player, CampaignMembership
-from ..schemas import CampaignOut
+from ..schemas import CampaignModelSchema, CreateCampaignRequest, Message, NotFoundError
 
 router = Router()
 
-class CreateCampaignRequest(Schema):
-    telegram_id: int
-    title: str
-    icon: str | None = None
-    description: str | None = None
 
-@router.post("create/")
-def create_campaign_api(request, campaign_request: CreateCampaignRequest) -> Response:
+@router.post("create/", response={201: Message, 404: NotFoundError})
+def create_campaign_api(request, campaign_request: CreateCampaignRequest):
     user_id = campaign_request.telegram_id
     user_obj = Player.objects.filter(telegram_id=user_id)
     if not user_obj.exists():
-        return Response({"message": "Target user not found"}, status=404)
+        return 404, NotFoundError()
     user_obj = user_obj.first()
 
     campaign_title = campaign_request.title
@@ -53,10 +48,10 @@ def create_campaign_api(request, campaign_request: CreateCampaignRequest) -> Res
         campaign=campaign_obj,
         status=2,
     )
-    return Response({}, status=201)
+    return 201, Message(message="created")
 
 
-@router.get("get/", response={200: CampaignOut | List[CampaignOut], 404: dict})
+@router.get("get/", response={200: CampaignModelSchema | List[CampaignModelSchema], 404: dict})
 def get_campaign_info_api(request, campaign_id: int | None = None, user_id: int | None = None):
     if campaign_id:
         try:
