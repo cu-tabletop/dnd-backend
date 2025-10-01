@@ -1,10 +1,10 @@
 from ninja import Router
-from ninja.responses import Response
+
+from dnd.schemas import PingResponse
 
 router = Router()
 
-@router.get("/", url_name="ping")
+
+@router.get("/", url_name="ping", response=PingResponse)
 def ping(request):
-    return Response({
-        'message': 'hello',
-    }, status=200)
+    return PingResponse(message="hello")
