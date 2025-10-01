@@ -1,7 +1,6 @@
-from django.urls import path
-from ninja import NinjaAPI, Router
+from ninja import Router
 
-from .views import *
+from .api import *
 
 dnd_api = Router()
 
