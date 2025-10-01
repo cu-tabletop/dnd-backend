@@ -6,7 +6,7 @@ from ..models import *
 router = Router()
 
 @router.get('/get/')
-def get_character_view(request, char_id: int) -> Response:
+def get_character_api(request, char_id: int) -> Response:
     char_obj = Character.objects.filter(id=char_id)
     if not char_obj.exists():
         return Response({}, status=404)
@@ -25,7 +25,7 @@ class UploadCharacter(Schema):
     data: dict
 
 @router.post("post/")
-def upload_character_view(request, upload: UploadCharacter):
+def upload_character_api(request, upload: UploadCharacter):
     owner_obj = Player.objects.filter(id=upload.owner_id)
     if not owner_obj.exists():
         return Response({}, status=404)

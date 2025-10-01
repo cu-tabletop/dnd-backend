@@ -1,4 +1,5 @@
 ﻿import base64
+import enum
 from io import BytesIO
 from typing import List
 
@@ -8,8 +9,8 @@ from ninja import Router, Schema
 from ninja.errors import HttpError
 from ninja.responses import Response
 
-from ..models import *
-from ..models.schemas import CampaignOut
+from ..models import Campaign, Player, CampaignMembership
+from ..schemas import CampaignOut
 
 router = Router()
 
@@ -20,7 +21,7 @@ class CreateCampaignRequest(Schema):
     description: str | None = None
 
 @router.post("create/")
-def create_campaign_view(request, campaign_request: CreateCampaignRequest) -> Response:
+def create_campaign_api(request, campaign_request: CreateCampaignRequest) -> Response:
     user_id = campaign_request.telegram_id
     user_obj = Player.objects.filter(telegram_id=user_id)
     if not user_obj.exists():
@@ -56,7 +57,7 @@ def create_campaign_view(request, campaign_request: CreateCampaignRequest) -> Re
 
 
 @router.get("get/", response={200: CampaignOut | List[CampaignOut], 404: dict})
-def get_campaign_info_view(request, campaign_id: int | None = None, user_id: int | None = None):
+def get_campaign_info_api(request, campaign_id: int | None = None, user_id: int | None = None):
     if campaign_id:
         try:
             campaign_obj = Campaign.objects.get(id=campaign_id)
@@ -89,7 +90,7 @@ class AddToCampaignRequest(Schema):
     user_id: int
 
 @router.post("add/")
-def add_to_campaign_view(request, body: AddToCampaignRequest) -> Response:
+def add_to_campaign_api(request, body: AddToCampaignRequest) -> Response:
     try:
         campaign_obj = Campaign.objects.get(id=body.campaign_id)
     except Campaign.DoesNotExist:
@@ -119,14 +120,19 @@ def add_to_campaign_view(request, body: AddToCampaignRequest) -> Response:
     )
 
 
+class CampaignPermissions(int, enum.Enum):
+    PLAYER = 0
+    MASTER = 1
+    OWNER = 2
+
 class CampaignEditPermissions(Schema):
     campaign_id: int
     owner_id: int
     user_id: int
-    status: int
+    status: CampaignPermissions
 
 @router.post("edit-permissions/")
-def edit_permissions_view(request, body: CampaignEditPermissions) -> Response:
+def edit_permissions_api(request, body: CampaignEditPermissions) -> Response:
     if body.status not in [0, 1, 2]:
         return Response({"error": "Invalid status value"}, status=400)
 

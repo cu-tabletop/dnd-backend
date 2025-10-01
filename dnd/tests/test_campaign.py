@@ -10,7 +10,7 @@ class TestCampaignCreate(APITestCase):
     client: APIClient
 
     def setUp(self):
-        self.url = reverse('api-1.0.0:create_campaign_view')
+        self.url = reverse('api-1.0.0:create_campaign_api')
         self.player = Player.objects.create(telegram_id=12345, bio='test bio')
 
     def test_campaign_create_success(self):
@@ -55,7 +55,7 @@ class TestGetCampaignInfo(APITestCase):
     client: APIClient
 
     def setUp(self):
-        self.url = reverse("api-1.0.0:get_campaign_info_view")
+        self.url = reverse("api-1.0.0:get_campaign_info_api")
         self.player = Player.objects.create(telegram_id=111, bio='user')
         self.public_campaign = Campaign.objects.create(title='Public Campaign', private=False)
         self.private_campaign = Campaign.objects.create(title='Private Campaign', private=True)
@@ -110,7 +110,7 @@ class TestAddToCampaign(APITestCase):
     client: APIClient
 
     def setUp(self):
-        self.url = reverse("api-1.0.0:add_to_campaign_view")
+        self.url = reverse("api-1.0.0:add_to_campaign_api")
         self.owner = Player.objects.create(telegram_id=1)
         self.user = Player.objects.create(telegram_id=2)
         self.campaign = Campaign.objects.create(title="Test Campaign", private=False)
@@ -167,7 +167,7 @@ class TestEditPermissions(APITestCase):
     client: APIClient
 
     def setUp(self):
-        self.url = reverse("api-1.0.0:edit_permissions_view")
+        self.url = reverse("api-1.0.0:edit_permissions_api")
         self.owner = Player.objects.create(telegram_id=1)
         self.user = Player.objects.create(telegram_id=2)
         self.campaign = Campaign.objects.create(title="Permission Campaign", private=False)
@@ -179,7 +179,7 @@ class TestEditPermissions(APITestCase):
             "campaign_id": self.campaign.id,
             "owner_id": self.owner.id,
             "user_id": self.user.id,
-            "status": 1,  # Promote to master
+            "status": 1,
         }
         response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, 200)
@@ -198,7 +198,7 @@ class TestEditPermissions(APITestCase):
             "status": 5,  # invalid
         }
         response = self.client.post(self.url, data, format="json")
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 422)
 
     def test_campaign_not_found(self):
         data = {

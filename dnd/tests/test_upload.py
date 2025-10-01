@@ -1,14 +1,14 @@
-from rest_framework.test import APITestCase
-from rest_framework import status
-from django.urls import reverse
-
 import json
+
+from django.urls import reverse
+from rest_framework.test import APITestCase
+
 from ..models import *
 
 
 class TestUploadCharacter(APITestCase):
     def test_upload_character_success(self):
-        url = reverse('api-1.0.0:upload_character_view')
+        url = reverse('api-1.0.0:upload_character_api')
         data_obj = json.load(open("dnd/tests/example-character.json", encoding='utf-8'))
         user_id = 1
         campaign_obj = Campaign.objects.create(
