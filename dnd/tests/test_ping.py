@@ -1,9 +1,8 @@
-from rest_framework.test import APITestCase
-from rest_framework import status
+from django.test import TestCase
 from django.urls import reverse
 
 
-class TestPing(APITestCase):
+class TestPing(TestCase):
     def test_ping(self):
         url = reverse("api-1.0.0:ping")
         response = self.client.get(url)
