@@ -1,13 +1,13 @@
 ﻿import base64
 
-from django.test import TestCase, Client
 from django.urls import reverse
+from rest_framework.test import APITestCase, APIClient
 
 from ..models import Player, Campaign, CampaignMembership
 
 
-class TestCampaignCreate(TestCase):
-    client: Client
+class TestCampaignCreate(APITestCase):
+    client: APIClient
 
     def setUp(self):
         self.url = reverse('api-1.0.0:create_campaign_view')
@@ -51,8 +51,8 @@ class TestCampaignCreate(TestCase):
         self.assertEqual(response.status_code, 422)
 
 
-class TestGetCampaignInfo(TestCase):
-    client: Client
+class TestGetCampaignInfo(APITestCase):
+    client: APIClient
 
     def setUp(self):
         self.url = reverse("api-1.0.0:get_campaign_info_view")
@@ -106,9 +106,8 @@ class TestGetCampaignInfo(TestCase):
         response = self.client.get(self.url, {'user_id': 'notanint'})
         self.assertEqual(response.status_code, 422)
 
-
-class TestAddToCampaign(TestCase):
-    client: Client
+class TestAddToCampaign(APITestCase):
+    client: APIClient
 
     def setUp(self):
         self.url = reverse("api-1.0.0:add_to_campaign_view")
@@ -164,8 +163,8 @@ class TestAddToCampaign(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
-class TestEditPermissions(TestCase):
-    client: Client
+class TestEditPermissions(APITestCase):
+    client: APIClient
 
     def setUp(self):
         self.url = reverse("api-1.0.0:edit_permissions_view")

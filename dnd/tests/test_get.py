@@ -1,11 +1,14 @@
-﻿from django.test import TestCase, Client
+﻿from rest_framework.test import APITestCase, APIClient
+from rest_framework import status
+from rest_framework.response import Response
 from django.urls import reverse
+
 
 from ..models import *
 
 
-class TestGetCharacter(TestCase):
-    client: Client
+class TestGetCharacter(APITestCase):
+    client: APIClient
     def test_get_character_success(self):
         url = reverse("api-1.0.0:get_character_view")
 
@@ -16,7 +19,7 @@ class TestGetCharacter(TestCase):
         char_obj.save_data(char_data)
         char_obj.save()
 
-        response = self.client.get(url, {"char_id": char_obj.id})
+        response: Response = self.client.get(url, { "char_id": char_obj.id })
         data = response.json()
         self.assertEqual(response.status_code, 200)
 
@@ -25,5 +28,5 @@ class TestGetCharacter(TestCase):
 
     def test_get_character_incorrect_query(self):
         url = reverse("api-1.0.0:get_character_view")
-        response = self.client.get(url, {"char_id": 'Hello, world!'})
+        response: Response = self.client.get(url, { "char_id": 'Hello, world!' })
         self.assertEqual(response.status_code, 422)
