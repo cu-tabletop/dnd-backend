@@ -1,5 +1,6 @@
 ﻿django
 django-ninja
+djangorestframework # used in testing
 requests
 beautifulsoup4
 gunicorn
