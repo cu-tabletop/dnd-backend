@@ -1,5 +1,4 @@
-﻿from rest_framework import serializers
-from django.db import models
+﻿from django.db import models
 
 
 class Campaign(models.Model):
@@ -9,8 +8,5 @@ class Campaign(models.Model):
     verified = models.BooleanField(default=0)
     private = models.BooleanField(default=0)
 
-
-class CampaignSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Campaign
-        fields = ["id", "title", "description", "icon", "verified", "private"]
+    class Config:
+        orm_mode = True

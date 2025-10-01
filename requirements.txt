@@ -1,6 +1,6 @@
 ﻿django
-djangorestframework
-djangorestframework-simplejwt
+django-ninja
+djangorestframework # used in testing
 requests
 beautifulsoup4
 gunicorn
