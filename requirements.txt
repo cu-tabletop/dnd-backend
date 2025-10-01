@@ -1,6 +1,5 @@
 ﻿django
-djangorestframework
-djangorestframework-simplejwt
+django-ninja
 requests
 beautifulsoup4
 gunicorn

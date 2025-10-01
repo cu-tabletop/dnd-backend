@@ -10,7 +10,7 @@ from ..models import *
 class TestGetCharacter(APITestCase):
     client: APIClient
     def test_get_character_success(self):
-        url = reverse('get character')
+        url = reverse("api-1.0.0:get_character_view")
 
         owner_obj = Player.objects.create(telegram_id=1, bio='test bio')
         campaign_obj = Campaign.objects.create(title="test")
@@ -20,12 +20,13 @@ class TestGetCharacter(APITestCase):
         char_obj.save()
 
         response: Response = self.client.get(url, { "char_id": char_obj.id })
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(response.data.get("char_data"), char_data)
-        self.assertEqual(response.data.get('campaign_id'), campaign_obj.id)
+        self.assertEqual(data.get("char_data"), char_data)
+        self.assertEqual(data.get('campaign_id'), campaign_obj.id)
 
     def test_get_character_incorrect_query(self):
-        url = reverse('get character')
+        url = reverse("api-1.0.0:get_character_view")
         response: Response = self.client.get(url, { "char_id": 'Hello, world!' })
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, 422)

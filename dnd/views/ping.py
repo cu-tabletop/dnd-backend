@@ -1,11 +1,10 @@
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework.request import Request
+from ninja import Router
+from ninja.responses import Response
 
+router = Router()
 
-@api_view(['GET'])
-def ping(request: Request):
+@router.get("/", url_name="ping")
+def ping(request):
     return Response({
         'message': 'hello',
-    }, status.HTTP_200_OK)
+    }, status=200)
