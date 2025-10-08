@@ -1,4 +1,4 @@
-﻿import base64
+import base64
 from io import BytesIO
 from typing import List
 
@@ -15,7 +15,7 @@ from ..schemas import (
     Message,
     NotFoundError,
     AddToCampaignRequest,
-    CampaignEditPermissions
+    CampaignEditPermissions,
 )
 
 router = Router()
@@ -58,7 +58,8 @@ def create_campaign_api(request, campaign_request: CreateCampaignRequest):
 
 
 @router.get(
-    "get/", response={200: CampaignModelSchema | List[CampaignModelSchema], 404: dict}
+    "get/",
+    response={200: CampaignModelSchema | List[CampaignModelSchema], 404: dict},
 )
 def get_campaign_info_api(
     request, campaign_id: int | None = None, user_id: int | None = None

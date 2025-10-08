@@ -1,4 +1,4 @@
-﻿import enum
+import enum
 
 from ninja import ModelSchema, Schema
 

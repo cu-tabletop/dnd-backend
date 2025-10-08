@@ -1,4 +1,4 @@
-﻿from ninja import Router
+from ninja import Router
 from ninja.responses import Response
 
 from ..models import Player, Character, Campaign

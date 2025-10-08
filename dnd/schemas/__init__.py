@@ -1,4 +1,4 @@
-﻿from .campaign import (
+from .campaign import (
     CampaignModelSchema,
     CreateCampaignRequest,
     AddToCampaignRequest,

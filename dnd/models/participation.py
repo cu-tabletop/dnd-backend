@@ -11,7 +11,10 @@ class RoomParticipation(models.Model):
     room = models.ForeignKey(Room, models.CASCADE)
     character = models.ForeignKey(Character, models.CASCADE)
 
+
 class CampaignMembership(models.Model):
     user = models.ForeignKey(Player, models.CASCADE)
     campaign = models.ForeignKey(Campaign, models.CASCADE)
-    status = models.PositiveSmallIntegerField(default=0)  # Role. 0 - player, 1 - master, 2 - owner
+    status = models.PositiveSmallIntegerField(
+        default=0
+    )  # Role. 0 - player, 1 - master, 2 - owner

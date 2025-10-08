@@ -1,4 +1,4 @@
-﻿from ninja import Schema
+from ninja import Schema
 
 
 class Message(Schema):
