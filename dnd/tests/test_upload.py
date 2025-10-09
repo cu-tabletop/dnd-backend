@@ -14,6 +14,7 @@ class TestUploadCharacter(APITestCase):
         campaign_obj = Campaign.objects.create(title="test campaign")
         player_obj = Player.objects.create(
             id=user_id,
+            telegram_id=123,
             bio="test bio",
             admin=False,
         )

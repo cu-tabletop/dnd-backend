@@ -2,7 +2,7 @@ import enum
 
 from ninja import ModelSchema, Schema
 
-from ..models import Campaign
+from dnd.models.campaign import Campaign
 
 
 class CreateCampaignRequest(Schema):

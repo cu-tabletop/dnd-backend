@@ -24,10 +24,10 @@ class TestGetCharacter(APITestCase):
         data = response.json()
         self.assertEqual(response.status_code, 200)
 
-        self.assertEqual(data.get("char_data"), char_data)
+        self.assertEqual(data.get("data"), char_data)
         self.assertEqual(data.get("campaign_id"), campaign_obj.id)
 
     def test_get_character_incorrect_query(self):
         url = reverse("api-1.0.0:get_character_api")
-        response: Response = self.client.get(url, {"char_id": "Hello, world!"})
+        response: Response = self.client.get(url, {"id": "Hello, world!"})
         self.assertEqual(response.status_code, 422)

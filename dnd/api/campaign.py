@@ -1,28 +1,31 @@
 import base64
 from io import BytesIO
-from typing import List
 
-from PIL import Image as PILImage
 from django.core.files.base import ContentFile
+from django.http import HttpRequest
 from ninja import Router
 from ninja.errors import HttpError
 from ninja.responses import Response
+from PIL import Image as PILImage
 
-from ..models import Campaign, Player, CampaignMembership
-from ..schemas import (
+from dnd.models import Campaign, CampaignMembership, Player
+from dnd.schemas import (
+    AddToCampaignRequest,
+    CampaignEditPermissions,
     CampaignModelSchema,
     CreateCampaignRequest,
     Message,
     NotFoundError,
-    AddToCampaignRequest,
-    CampaignEditPermissions,
 )
 
 router = Router()
 
 
 @router.post("create/", response={201: Message, 404: NotFoundError})
-def create_campaign_api(request, campaign_request: CreateCampaignRequest):
+def create_campaign_api(
+    request: HttpRequest,
+    campaign_request: CreateCampaignRequest,
+):
     user_id = campaign_request.telegram_id
     user_obj = Player.objects.filter(telegram_id=user_id)
     if not user_obj.exists():
@@ -59,10 +62,15 @@ def create_campaign_api(request, campaign_request: CreateCampaignRequest):
 
 @router.get(
     "get/",
-    response={200: CampaignModelSchema | List[CampaignModelSchema], 404: dict},
+    response={
+        200: CampaignModelSchema | list[CampaignModelSchema],
+        404: dict,
+    },
 )
 def get_campaign_info_api(
-    request, campaign_id: int | None = None, user_id: int | None = None
+    request: HttpRequest,
+    campaign_id: int | None = None,
+    user_id: int | None = None,
 ):
     if campaign_id:
         try:
@@ -86,9 +94,9 @@ def get_campaign_info_api(
 
     if user_id:
         user_campaigns = Campaign.objects.filter(
-            id__in=CampaignMembership.objects.filter(user_id=user_id).values_list(
-                "campaign_id", flat=True
-            )
+            id__in=CampaignMembership.objects.filter(
+                user_id=user_id
+            ).values_list("campaign_id", flat=True)
         )
         campaigns = campaigns.union(user_campaigns)
 
@@ -96,7 +104,10 @@ def get_campaign_info_api(
 
 
 @router.post("add/")
-def add_to_campaign_api(request, body: AddToCampaignRequest) -> Response:
+def add_to_campaign_api(
+    request: HttpRequest,
+    body: AddToCampaignRequest,
+) -> Response:
     try:
         campaign_obj = Campaign.objects.get(id=body.campaign_id)
     except Campaign.DoesNotExist:
@@ -106,7 +117,9 @@ def add_to_campaign_api(request, body: AddToCampaignRequest) -> Response:
     if not CampaignMembership.objects.filter(
         campaign=campaign_obj, user_id=body.owner_id, status=2
     ).exists():
-        return Response({"error": "Only the owner can add members"}, status=403)
+        return Response(
+            {"error": "Only the owner can add members"}, status=403
+        )
 
     try:
         user = Player.objects.get(id=body.user_id)
@@ -127,7 +140,10 @@ def add_to_campaign_api(request, body: AddToCampaignRequest) -> Response:
 
 
 @router.post("edit-permissions/")
-def edit_permissions_api(request, body: CampaignEditPermissions) -> Response:
+def edit_permissions_api(
+    request: HttpRequest,
+    body: CampaignEditPermissions,
+) -> Response:
     if body.status not in [0, 1, 2]:
         return Response({"error": "Invalid status value"}, status=400)
 
@@ -140,7 +156,9 @@ def edit_permissions_api(request, body: CampaignEditPermissions) -> Response:
     if not CampaignMembership.objects.filter(
         campaign=campaign_obj, user_id=body.owner_id, status=2
     ).exists():
-        return Response({"error": "Only the owner can edit permissions"}, status=403)
+        return Response(
+            {"error": "Only the owner can edit permissions"}, status=403
+        )
 
     try:
         membership = CampaignMembership.objects.get(

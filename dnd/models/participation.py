@@ -1,9 +1,9 @@
 from django.db import models
 
-from .room import Room
-from .player import Player
-from .campaign import Campaign
-from .character import Character
+from dnd.models.campaign import Campaign
+from dnd.models.character import Character
+from dnd.models.player import Player
+from dnd.models.room import Room
 
 
 class RoomParticipation(models.Model):

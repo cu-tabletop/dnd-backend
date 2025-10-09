@@ -32,7 +32,7 @@ fix-only = false
 force-exclude = true
 include = ["*.py", "*.pyi", "*.ipynb", "**/pyproject.toml"]
 indent-width = 4
-line-length = 90
+line-length = 79
 
 [tool.ruff.format]
 docstring-code-format = true
