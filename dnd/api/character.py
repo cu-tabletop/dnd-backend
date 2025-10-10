@@ -1,19 +1,25 @@
 from django.http import HttpRequest
+from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.responses import Response
 
 from dnd.models import Campaign, Character, Player
 from dnd.schemas.character import CharacterOut, UploadCharacter
+from dnd.schemas.error import NotFoundError, ValidationError, ForbiddenError
 
 router = Router()
 
 
-@router.get("/get/")
+@router.get(
+    "/get/",
+    response={
+        200: CharacterOut,
+        400: ValidationError,
+        404: NotFoundError,
+    },
+)
 def get_character_api(request: HttpRequest, char_id: int) -> Response:
-    char_obj = Character.objects.filter(id=char_id)
-    if not char_obj.exists():
-        return Response({}, status=404)
-    char_obj = char_obj.first()
+    char_obj = get_object_or_404(Character, id=char_id)
 
     return CharacterOut(
         id=char_obj.id,
@@ -24,17 +30,18 @@ def get_character_api(request: HttpRequest, char_id: int) -> Response:
     )
 
 
-@router.post("post/", response={201: CharacterOut})
+@router.post(
+    "post/",
+    response={
+        201: CharacterOut,
+        400: ValidationError,
+        404: NotFoundError,
+    },
+)
 def upload_character_api(request: HttpRequest, upload: UploadCharacter):
-    owner_obj = Player.objects.filter(id=upload.owner_id)
-    if not owner_obj.exists():
-        return Response({}, status=404)
-    owner_obj = owner_obj.first()
+    owner_obj = get_object_or_404(Player, id=upload.owner_id)
 
-    campaign_obj = Campaign.objects.filter(id=upload.campaign_id)
-    if not campaign_obj.exists():
-        return Response({}, status=404)
-    campaign_obj = campaign_obj.first()
+    campaign_obj = get_object_or_404(Campaign, id=upload.campaign_id)
 
     char_obj = Character.objects.create(owner=owner_obj, campaign=campaign_obj)
     char_obj.save_data(upload.data)

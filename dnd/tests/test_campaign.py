@@ -30,12 +30,12 @@ class TestCampaignCreate(APITestCase):
     def test_campaign_create_missing_telegram_id(self):
         data = {"title": "no user campaign"}
         response = self.client.post(self.url, data, format="json")
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 400)
 
     def test_campaign_create_invalid_telegram_id_type(self):
         data = {"telegram_id": "not an int", "title": "fail"}
         response = self.client.post(self.url, data, format="json")
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 400)
 
     def test_campaign_create_nonexistent_user(self):
         data = {"telegram_id": 99999, "title": "ghost campaign"}
@@ -45,12 +45,12 @@ class TestCampaignCreate(APITestCase):
     def test_campaign_create_missing_title(self):
         data = {"telegram_id": self.player.telegram_id}
         response = self.client.post(self.url, data, format="json")
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 400)
 
     def test_campaign_create_invalid_title_type(self):
         data = {"telegram_id": self.player.telegram_id, "title": 12345}
         response = self.client.post(self.url, data, format="json")
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 400)
 
 
 class TestGetCampaignInfo(APITestCase):
@@ -70,7 +70,9 @@ class TestGetCampaignInfo(APITestCase):
         )
 
     def test_get_specific_public_campaign(self):
-        response = self.client.get(self.url, {"campaign_id": self.public_campaign.id})
+        response = self.client.get(
+            self.url, {"campaign_id": self.public_campaign.id}
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["title"], "Public Campaign")
 
@@ -101,13 +103,17 @@ class TestGetCampaignInfo(APITestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_get_private_campaign_no_user_id(self):
-        response = self.client.get(self.url, {"campaign_id": self.private_campaign.id})
+        response = self.client.get(
+            self.url, {"campaign_id": self.private_campaign.id}
+        )
         self.assertEqual(response.status_code, 404)
 
     def test_get_all_public_campaigns(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(any(c["title"] == "Public Campaign" for c in response.json()))
+        self.assertTrue(
+            any(c["title"] == "Public Campaign" for c in response.json())
+        )
 
     def test_get_campaigns_with_valid_user_id(self):
         response = self.client.get(self.url, {"user_id": self.player.id})
@@ -118,7 +124,7 @@ class TestGetCampaignInfo(APITestCase):
 
     def test_get_campaigns_with_invalid_user_id_type(self):
         response = self.client.get(self.url, {"user_id": "notanint"})
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 400)
 
 
 class TestAddToCampaign(APITestCase):
@@ -128,7 +134,9 @@ class TestAddToCampaign(APITestCase):
         self.url = reverse("api-1.0.0:add_to_campaign_api")
         self.owner = Player.objects.create(telegram_id=1)
         self.user = Player.objects.create(telegram_id=2)
-        self.campaign = Campaign.objects.create(title="Test Campaign", private=False)
+        self.campaign = Campaign.objects.create(
+            title="Test Campaign", private=False
+        )
         CampaignMembership.objects.create(
             user=self.owner,
             campaign=self.campaign,
@@ -167,7 +175,7 @@ class TestAddToCampaign(APITestCase):
 
     def test_missing_parameters(self):
         response = self.client.post(self.url, {}, format="json")
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 400)
 
     def test_campaign_not_found(self):
         data = {
@@ -231,7 +239,7 @@ class TestEditPermissions(APITestCase):
 
     def test_missing_parameters(self):
         response = self.client.post(self.url, {}, format="json")
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 400)
 
     def test_invalid_status_value(self):
         data = {
@@ -241,7 +249,7 @@ class TestEditPermissions(APITestCase):
             "status": 5,  # invalid
         }
         response = self.client.post(self.url, data, format="json")
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 400)
 
     def test_campaign_not_found(self):
         data = {

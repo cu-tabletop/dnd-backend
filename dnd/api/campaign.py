@@ -3,6 +3,7 @@ from io import BytesIO
 
 from django.core.files.base import ContentFile
 from django.http import HttpRequest
+from django.shortcuts import get_object_or_404
 from ninja import Router
 from ninja.errors import HttpError
 from ninja.responses import Response
@@ -14,23 +15,28 @@ from dnd.schemas import (
     CampaignEditPermissions,
     CampaignModelSchema,
     CreateCampaignRequest,
+    ForbiddenError,
     Message,
     NotFoundError,
+    ValidationError,
 )
 
 router = Router()
 
 
-@router.post("create/", response={201: Message, 404: NotFoundError})
+@router.post(
+    "create/",
+    response={
+        201: Message,
+        404: NotFoundError,
+    },
+)
 def create_campaign_api(
     request: HttpRequest,
     campaign_request: CreateCampaignRequest,
 ):
     user_id = campaign_request.telegram_id
-    user_obj = Player.objects.filter(telegram_id=user_id)
-    if not user_obj.exists():
-        return 404, NotFoundError()
-    user_obj = user_obj.first()
+    user_obj = get_object_or_404(Player, telegram_id=user_id)
 
     campaign_title = campaign_request.title
 
@@ -64,7 +70,7 @@ def create_campaign_api(
     "get/",
     response={
         200: CampaignModelSchema | list[CampaignModelSchema],
-        404: dict,
+        404: NotFoundError,
     },
 )
 def get_campaign_info_api(
@@ -73,10 +79,7 @@ def get_campaign_info_api(
     user_id: int | None = None,
 ):
     if campaign_id:
-        try:
-            campaign_obj = Campaign.objects.get(id=campaign_id)
-        except Campaign.DoesNotExist:
-            raise HttpError(404, "requested campaign does not exist")
+        campaign_obj = get_object_or_404(Campaign, id=campaign_id)
 
         if campaign_obj.private:
             if (
@@ -103,32 +106,33 @@ def get_campaign_info_api(
     return list(campaigns)
 
 
-@router.post("add/")
+@router.post(
+    "add/",
+    response={
+        200: str,
+        201: str,
+        403: ForbiddenError,
+        404: NotFoundError,
+    },
+)
 def add_to_campaign_api(
     request: HttpRequest,
     body: AddToCampaignRequest,
-) -> Response:
-    try:
-        campaign_obj = Campaign.objects.get(id=body.campaign_id)
-    except Campaign.DoesNotExist:
-        return Response({"error": "Campaign not found"}, status=404)
+):
+    campaign_obj = get_object_or_404(Campaign, id=body.campaign_id)
 
     # Verify owner permissions
     if not CampaignMembership.objects.filter(
         campaign=campaign_obj, user_id=body.owner_id, status=2
     ).exists():
-        return Response(
-            {"error": "Only the owner can add members"}, status=403
-        )
+        return 403, ForbiddenError(message="Only the owner can add members")
 
-    try:
-        user = Player.objects.get(id=body.user_id)
-    except Player.DoesNotExist:
-        return Response({"error": "User not found"}, status=404)
+    user = get_object_or_404(Player, id=body.user_id)
 
     membership, created = CampaignMembership.objects.get_or_create(
         user=user, campaign=campaign_obj, defaults={"status": 0}
     )
+
     if not created:
         membership.status = 0
         membership.save()
@@ -139,40 +143,41 @@ def add_to_campaign_api(
     )
 
 
-@router.post("edit-permissions/")
+@router.post(
+    "edit-permissions/",
+    response={
+        200: Message,
+        400: ValidationError,
+        403: ValidationError,
+        404: ValidationError,
+    },
+)
 def edit_permissions_api(
     request: HttpRequest,
     body: CampaignEditPermissions,
-) -> Response:
+):
     if body.status not in [0, 1, 2]:
-        return Response({"error": "Invalid status value"}, status=400)
+        return 400, ValidationError(message="Invalid status value")
 
-    try:
-        campaign_obj = Campaign.objects.get(id=body.campaign_id)
-    except Campaign.DoesNotExist:
-        return Response({"error": "Campaign not found"}, status=404)
+    campaign_obj = get_object_or_404(Campaign, id=body.campaign_id)
 
     # Verify owner permissions
     if not CampaignMembership.objects.filter(
         campaign=campaign_obj, user_id=body.owner_id, status=2
     ).exists():
-        return Response(
-            {"error": "Only the owner can edit permissions"}, status=403
+        return 403, ForbiddenError(
+            message="Only the owner can edit permissions"
         )
 
-    try:
-        membership = CampaignMembership.objects.get(
-            campaign=campaign_obj, user_id=body.user_id
-        )
-    except CampaignMembership.DoesNotExist:
-        return Response({"error": "Membership not found"}, status=404)
-
+    membership = get_object_or_404(
+        CampaignMembership,
+        campaign=campaign_obj,
+        user_id=body.user_id,
+    )
     membership.status = body.status
     membership.save()
 
-    return Response(
-        {
-            "message": f"Updated user {body.user_id} role to {body.status} in campaign {campaign_obj.id}"
-        },
-        status=200,
+    return 200, Message(
+        message=f"Updated user {body.user_id} role "
+        f"to {body.status} in campaign {campaign_obj.id}"
     )

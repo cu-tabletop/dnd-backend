@@ -21,7 +21,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-zw-z1o&^k77(igor9mpzqin+@8-l!w8(p#$8)_$p!1yavau@zf"
+SECRET_KEY = (
+    "django-insecure-zw-z1o&^k77(igor9mpzqin+@8-l!w8(p#$8)_$p!1yavau@zf"
+)
 key = os.environ.get("DJANGO_SECRET_KEY")
 if key:
     SECRET_KEY = key
@@ -99,12 +101,18 @@ if not database:
     elif database == "POSTRESQL":
         DATABASES["default"] = {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": "mydatabase" if not os.environ["NAME"] else os.environ["NAME"],
-            "USER": "mydatabaseuser" if not os.environ["USER"] else os.environ["USER"],
+            "NAME": "mydatabase"
+            if not os.environ["NAME"]
+            else os.environ["NAME"],
+            "USER": "mydatabaseuser"
+            if not os.environ["USER"]
+            else os.environ["USER"],
             "PASSWORD": "mypassword"
             if not os.environ["PASSWORD"]
             else os.environ["PASSWORD"],
-            "HOST": "127.0.0.1" if not os.environ["HOST"] else os.environ["HOST"],
+            "HOST": "127.0.0.1"
+            if not os.environ["HOST"]
+            else os.environ["HOST"],
             "PORT": "5432" if not os.environ["PORT"] else os.environ["PORT"],
         }
 

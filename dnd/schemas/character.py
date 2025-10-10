@@ -13,4 +13,3 @@ class CharacterOut(Schema):
     owner_telegram_id: int
     campaign_id: int
     data: dict
-

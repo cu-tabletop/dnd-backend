@@ -9,7 +9,9 @@ from ..models import *
 class TestUploadCharacter(APITestCase):
     def test_upload_character_success(self):
         url = reverse("api-1.0.0:upload_character_api")
-        data_obj = json.load(open("dnd/tests/example-character.json", encoding="utf-8"))
+        data_obj = json.load(
+            open("dnd/tests/example-character.json", encoding="utf-8")
+        )
         user_id = 1
         campaign_obj = Campaign.objects.create(title="test campaign")
         player_obj = Player.objects.create(

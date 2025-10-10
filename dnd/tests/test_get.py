@@ -13,7 +13,9 @@ class TestGetCharacter(APITestCase):
 
         owner_obj = Player.objects.create(telegram_id=1, bio="test bio")
         campaign_obj = Campaign.objects.create(title="test")
-        char_obj = Character.objects.create(owner=owner_obj, campaign=campaign_obj)
+        char_obj = Character.objects.create(
+            owner=owner_obj, campaign=campaign_obj
+        )
         char_data = {
             "char_name": "Grigory",
         }
@@ -30,4 +32,4 @@ class TestGetCharacter(APITestCase):
     def test_get_character_incorrect_query(self):
         url = reverse("api-1.0.0:get_character_api")
         response: Response = self.client.get(url, {"id": "Hello, world!"})
-        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.status_code, 400)
