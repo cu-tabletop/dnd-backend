@@ -21,7 +21,9 @@ class TestCampaignCreate(APITestCase):
 
     def setUp(self):
         self.url = reverse("api-1.0.0:create_campaign_api")
-        self.player = Player.objects.create(telegram_id=111, bio="test bio", verified=True)
+        self.player = Player.objects.create(
+            telegram_id=111, bio="test bio", verified=True
+        )
 
     def test_campaign_create_success(self):
         data = {
@@ -51,29 +53,46 @@ class TestGetCampaignInfo(APITestCase):
     def setUp(self):
         self.url = reverse("api-1.0.0:get_campaign_info_api")
         self.owner = Player.objects.create(telegram_id=222)
-        self.campaign_public = Campaign.objects.create(title="Public Campaign", private=False)
-        self.campaign_private = Campaign.objects.create(title="Private Campaign", private=True)
-        CampaignMembership.objects.create(user=self.owner, campaign=self.campaign_private, status=2)
+        self.campaign_public = Campaign.objects.create(
+            title="Public Campaign", private=False
+        )
+        self.campaign_private = Campaign.objects.create(
+            title="Private Campaign", private=True
+        )
+        CampaignMembership.objects.create(
+            user=self.owner, campaign=self.campaign_private, status=2
+        )
 
     def test_get_single_public_campaign(self):
-        response = self.client.get(self.url, {"campaign_id": self.campaign_public.id})
+        response = self.client.get(
+            self.url, {"campaign_id": self.campaign_public.id}
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["title"], self.campaign_public.title)
 
     def test_get_private_campaign_as_member(self):
-        response = self.client.get(self.url, {
-            "campaign_id": self.campaign_private.id,
-            "user_id": self.owner.id,
-        })
+        response = self.client.get(
+            self.url,
+            {
+                "campaign_id": self.campaign_private.id,
+                "user_id": self.owner.id,
+            },
+        )
         self.assertEqual(response.status_code, 200)
 
     def test_get_private_campaign_as_non_member(self):
-        response = self.client.get(self.url, {"campaign_id": self.campaign_private.id})
+        response = self.client.get(
+            self.url, {"campaign_id": self.campaign_private.id}
+        )
         self.assertEqual(response.status_code, 404)
 
     def test_get_all_campaigns_for_user(self):
-        new_campaign = Campaign.objects.create(title="Another Campaign", private=False)
-        CampaignMembership.objects.create(user=self.owner, campaign=new_campaign)
+        new_campaign = Campaign.objects.create(
+            title="Another Campaign", private=False
+        )
+        CampaignMembership.objects.create(
+            user=self.owner, campaign=new_campaign
+        )
         response = self.client.get(self.url, {"user_id": self.owner.id})
         self.assertEqual(response.status_code, 200)
         self.assertTrue(isinstance(response.json(), list))
@@ -88,7 +107,9 @@ class TestAddToCampaign(APITestCase):
         self.owner = Player.objects.create(telegram_id=333)
         self.new_user = Player.objects.create(telegram_id=334)
         self.campaign = Campaign.objects.create(title="Owner Campaign")
-        CampaignMembership.objects.create(user=self.owner, campaign=self.campaign, status=2)
+        CampaignMembership.objects.create(
+            user=self.owner, campaign=self.campaign, status=2
+        )
 
     def test_add_user_success(self):
         data = {
@@ -99,11 +120,15 @@ class TestAddToCampaign(APITestCase):
         response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, 201)
         self.assertTrue(
-            CampaignMembership.objects.filter(campaign=self.campaign, user=self.new_user).exists()
+            CampaignMembership.objects.filter(
+                campaign=self.campaign, user=self.new_user
+            ).exists()
         )
 
     def test_add_user_already_exists(self):
-        CampaignMembership.objects.create(user=self.new_user, campaign=self.campaign)
+        CampaignMembership.objects.create(
+            user=self.new_user, campaign=self.campaign
+        )
         data = {
             "campaign_id": self.campaign.id,
             "owner_id": self.owner.id,
@@ -131,8 +156,12 @@ class TestEditPermissions(APITestCase):
         self.owner = Player.objects.create(telegram_id=444)
         self.member = Player.objects.create(telegram_id=445)
         self.campaign = Campaign.objects.create(title="Permission Campaign")
-        CampaignMembership.objects.create(user=self.owner, campaign=self.campaign, status=2)
-        CampaignMembership.objects.create(user=self.member, campaign=self.campaign, status=0)
+        CampaignMembership.objects.create(
+            user=self.owner, campaign=self.campaign, status=2
+        )
+        CampaignMembership.objects.create(
+            user=self.member, campaign=self.campaign, status=0
+        )
 
     def test_edit_permission_success(self):
         data = {
