@@ -88,7 +88,7 @@ def get_campaign_info_api(
                     campaign=campaign_obj, user_id=user_id
                 ).exists()
             ):
-                # 👌 disguise private campaigns as non-existent
+                # disguise private campaigns as non-existent
                 raise HttpError(404, "requested campaign does not exist")
 
         return campaign_obj

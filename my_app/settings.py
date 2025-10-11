@@ -34,8 +34,7 @@ debug = os.environ.get("DJANGO_DEBUG")
 if debug:
     DEBUG = debug.lower() == "true"
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
 # Application definition
 
