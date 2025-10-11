@@ -1,9 +1,10 @@
-from django.core.files.base import ContentFile
-from django.db import models
 import json
 
-from .campaign import Campaign
-from .player import Player
+from django.core.files.base import ContentFile
+from django.db import models
+
+from dnd.models.campaign import Campaign
+from dnd.models.player import Player
 
 
 class Character(models.Model):
@@ -12,20 +13,22 @@ class Character(models.Model):
         Player,
         on_delete=models.SET_NULL,
         null=True,
-        blank=True
+        blank=True,
     )
     campaign = models.ForeignKey(Campaign, models.CASCADE, null=True)
 
     data = models.FileField(upload_to="chardata")
 
     def load_data(self):
-        """ Internal function that loads data from file stored in database. """
-        with self.data.open('r') as f:
+        """Internal function that loads data from file stored in database."""
+        with self.data.open("r") as f:
             return json.load(f)
 
-    def save_data(self, data):
-        """ Internal function that saves data to a file stored in database. """
-        self.data.save(f"{self.id}.json", ContentFile(json.dumps(data)), save=False)
+    def save_data(self, data: dict):
+        """Internal function that saves data to a file stored in database."""
+        self.data.save(
+            f"{self.id}.json", ContentFile(json.dumps(data)), save=False
+        )
 
     def get(self, *args):
         """
