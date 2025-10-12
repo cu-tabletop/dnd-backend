@@ -7,3 +7,4 @@ gunicorn==23.0.0
 pillow==11.3.0
 ruff==0.14.0
 coverage==7.10.7
+pydantic==2.11.10
