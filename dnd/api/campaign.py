@@ -107,7 +107,7 @@ def get_campaign_info_api(
 
 
 @router.post(
-    "add/",
+    "{campaign_id}/add/",
     response={
         200: str,
         201: str,
@@ -118,8 +118,9 @@ def get_campaign_info_api(
 def add_to_campaign_api(
     request: HttpRequest,
     body: AddToCampaignRequest,
+    campaign_id: int,
 ):
-    campaign_obj = get_object_or_404(Campaign, id=body.campaign_id)
+    campaign_obj = get_object_or_404(Campaign, id=campaign_id)
 
     # Verify owner permissions
     if not CampaignMembership.objects.filter(
@@ -144,7 +145,7 @@ def add_to_campaign_api(
 
 
 @router.post(
-    "edit-permissions/",
+    "{campaign_id}/edit-permissions/",
     response={
         200: Message,
         400: ValidationError,
@@ -153,13 +154,12 @@ def add_to_campaign_api(
     },
 )
 def edit_permissions_api(
-    request: HttpRequest,
-    body: CampaignEditPermissions,
+    request: HttpRequest, body: CampaignEditPermissions, campaign_id: int
 ):
     if body.status not in [0, 1, 2]:
         return 400, ValidationError(message="Invalid status value")
 
-    campaign_obj = get_object_or_404(Campaign, id=body.campaign_id)
+    campaign_obj = get_object_or_404(Campaign, id=campaign_id)
 
     # Verify owner permissions
     if not CampaignMembership.objects.filter(
