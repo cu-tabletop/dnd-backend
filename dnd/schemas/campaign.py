@@ -20,7 +20,6 @@ class CampaignModelSchema(ModelSchema):
 
 
 class AddToCampaignRequest(Schema):
-    campaign_id: int
     owner_id: int
     user_id: int
 
@@ -32,7 +31,6 @@ class CampaignPermissions(int, enum.Enum):
 
 
 class CampaignEditPermissions(Schema):
-    campaign_id: int
     owner_id: int
     user_id: int
     status: CampaignPermissions

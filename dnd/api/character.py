@@ -5,7 +5,7 @@ from ninja.responses import Response
 
 from dnd.models import Campaign, Character, Player
 from dnd.schemas.character import CharacterOut, UploadCharacter
-from dnd.schemas.error import NotFoundError, ValidationError, ForbiddenError
+from dnd.schemas.error import NotFoundError, ValidationError
 
 router = Router()
 
